@@ -145,4 +145,7 @@ app.use((err,req,res,next)=>{
    let {statusCode=500,message="Something went wrong.Please try again"}=err;
    res.render("error.ejs",{err})
 })
+app.get("/", (req, res) => {
+    res.redirect("/listings");
+});
 
