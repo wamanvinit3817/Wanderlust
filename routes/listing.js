@@ -1,199 +1,173 @@
-const express=require("express");
-const app=express();
-
-
-const path=require("path");
-
-const wrapAsync=require("../utils/wrapAsync.js")
-const ExpressError=require("../utils/ExpressError.js")
-
-app.set("view engine","ejs");
-app.set("views",path.join(__dirname,"views"));
-/*app.use(express.static(path.join(__dirname,"public")));*/
-app.use(express.static('public'));
-
-app.use(express.urlencoded({extended:true}));
-const methodoverride=require("method-override");
-
-app.use(methodoverride("_method")); 
-app.use(express.json());
-const listing=require("../models/listing.js");
-const review=require("../models/review.js");
-const ejsMate=require("ejs-mate");
-app.engine("ejs",ejsMate)
-const router=express.Router();
-const cookieParser=require("cookie-parser");
+const express = require("express");
+const app = express();
+const path = require("path");
+const wrapAsync = require("../utils/wrapAsync.js");
+const ExpressError = require("../utils/ExpressError.js");
+const ejsMate = require("ejs-mate");
+const methodoverride = require("method-override");
+const cookieParser = require("cookie-parser");
 const passport = require("passport");
-app.use(cookieParser());
-const {isLoggedin}=require("../middleware.js");
-const multer=require("multer");
-const {storage}=require("../cloudconfig.js");
-const upload=multer({storage});
-const geocoding = require('@mapbox/mapbox-sdk/services/geocoding');
-const user = require("../models/user.js");
+const multer = require("multer");
+const { storage } = require("../cloudconfig.js");
+const upload = multer({ storage });
+const geocoding = require("@mapbox/mapbox-sdk/services/geocoding");
+
+const { isLoggedin } = require("../middleware.js");
 const Listing = require("../models/listing.js");
-const mapToken=process.env.MAP_TOKEN;
-const geocodingClient = geocoding({ accessToken:mapToken });
+const Review = require("../models/review.js");
+const User = require("../models/user.js");
 
+const router = express.Router();
 
-app.get("/",(req,res)=>{
-    res.send("on root")
+const mapToken = process.env.MAP_TOKEN;
+const geocodingClient = geocoding({ accessToken: mapToken });
 
-})
-// router
+// App setup
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.engine("ejs", ejsMate);
+app.use(express.static("public"));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(methodoverride("_method"));
+app.use(cookieParser());
 
+router.get("/", wrapAsync(async (req, res) => {
+  const result = await Listing.find();
+  res.render("index.ejs", { result });
+}));
 
-router.get("/",wrapAsync(async (req,res)=>{
-   await listing.find().then((result)=>{ res.render("index.ejs",{result})});
-   
-}))
-
-router.get("/new",(req,res)=>{
-    
- 
-  if(!req.isAuthenticated()){
-
-     req.session.redirectUrl=req.originalUrl;
-    req.flash("error","You must be Logged in to create Listing.");
-    res.redirect("/login");
-  }else{
-    res.render("new.ejs")
+router.get("/new", (req, res) => {
+  if (!req.isAuthenticated()) {
+    req.session.redirectUrl = req.originalUrl;
+    req.flash("error", "You must be Logged in to create Listing.");
+    return res.redirect("/login");
   }
-    
-})
-
-router.post("/",upload.single("image"),wrapAsync(async (req,res,next)=>{
-  console.log(req.file)
-    if(!req.body.title || !req.body.description || !req.body.price || !req.body.location || !req.body.country){
-        throw new ExpressError(400,"Send valid data for your listing")
-    }
-  let response= await geocodingClient.forwardGeocode({
-  query: req.body.location,
-  limit: 1
-  }).send()
-     
-    
-//   console.log(response.body.features[0].geometry); 
-    await listing.insertOne({title:req.body.title,description:req.body.description,image:req.file.path,price:req.body.price,location:req.body.location,country:req.body.country,owner:req.user._id,geometry:response.body.features[0].geometry}).then((data)=>{console.log(data)})
-     
-    req.flash("success","New listing created sucessfully!")
-   
-    res.redirect("/listings")
-      
-}))
-
-router.get("/edit/:id",wrapAsync(async (req,res,next)=>{
-    let id=req.params.id;
-    await listing.findById(id).then((result)=>{
-        if(!result){
-            req.flash('error',"Listing doesnot exist")
-        }else{
-            if(!req.isAuthenticated()){
-
-                
-            req.flash("error","You must be Logged in to Edit Listing.");
-            res.redirect("/login");
-            
-        }else{
-         res.render("edit.ejs",{result})
-          }
-       }}) 
-}))
-router.patch("/edit/:id",upload.single("image"),wrapAsync(async (req,res,next)=>{
-    
-    if(!req.isAuthenticated()){
-        
-            req.flash("error","You must be Logged in to Edit Listing.");
-            res.redirect("/login");
-        }else{
-         if(!req.body.title && !req.body.description && !req.body.price && !req.body.location && !req.body.country){
-        throw new ExpressError(400,"Send valid data for your listing")
-    }
-        await listing.findByIdAndUpdate(req.params.id,{title:req.body.title,description:req.body.description,image:req.file.path,price:req.body.price,location:req.body.location,country:req.body.country}).then(()=>{ req.flash("success","Listing Edited sucessfully!");res.redirect(`/listings/show/${req.params.id}`)} )
-          }
-    
-   
-    
-}))
-router.delete("/delete/:id",isLoggedin,wrapAsync(async (req,res,next)=>{
-   await listing.findByIdAndDelete(req.params.id).then(()=>{ req.flash("success","Listing Deleted sucessfully!");res.redirect("/listings")})
-    
-}))
-router.get("/show/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-
-    const listing = await Listing
-      .findById(id)
-      .populate("owner")
-      .populate({
-        path: "reviews",
-        populate: { path: "owner" }
-      });
-
-    if (!listing) {
-      req.flash("error", "The listing does not exist.");
-      return res.redirect("/listings");
-    }
-
-    res.render("show.ejs", { listing, req });
-
-  } catch (err) {
-    console.error("Error fetching listing:", err);
-    req.flash("error", "Something went wrong.");
-    res.redirect("/listings");
-  }
+  res.render("new.ejs");
 });
 
-router.post("/:id/reviews",wrapAsync(async(req,res,next)=>{
-    let id=req.params.id;
-   
-    let listingr=await listing.findById(id)
-    let newReview=new review(req.body.review)
-     
-     if(!req.isAuthenticated()){
-         
-            res.locals
-            req.flash("error","You must be Logged in to Review Listing.");
-            res.redirect("/login");
-        }else{
-    if(!newReview.comment || !newReview.rating || newReview.rating<1 || newReview.rating>5){
-         throw new ExpressError(400,"Send valid data for your listing")
-    }else{
-        newReview.owner=req.user._id;
-        
-        listingr.reviews.push(newReview)
-    await newReview.save();
-   await listingr.save()
-    req.flash("success","Review created sucessfully!")
-    
-   res.redirect(`/listings/show/${id}`)}
+router.post("/", isLoggedin, upload.single("image"), wrapAsync(async (req, res) => {
+  console.log("Uploaded file:", req.file);
 
-    }
-    
-}))
+  if (!req.body.title || !req.body.description || !req.body.price || !req.body.location || !req.body.country) {
+    throw new ExpressError(400, "Send valid data for your listing");
+  }
 
-router.delete("/:id/reviews/:reviewid",wrapAsync(async (req,res,next)=>{
-    let listingId=req.params.id;
-    let reviewId=req.params.reviewid;
-    
-   await listing.findByIdAndUpdate(listingId,{$pull:{reviews:reviewId}}).then();
-   await review.findByIdAndDelete(reviewId).then();
-    req.flash("success","Review deleted sucessfully!")
-    res.redirect(`/listings/show/${listingId}`);
-    
-}))
-router.get("/wishlist/:id",async(req,res,next)=>{
-    let id=req.params.id;
- let userid=req.user._id
- console.log(userid)
-//  console.log(userid);
-    // listing.findById(id).then((data)=>{console.log(data)})
-//    let listing=await Listing.findById(id);
-   await user.findByIdAndUpdate(userid, { $push: { wishlist: id} }).then((data)=>{console.log(data)}); 
-    res.send("on wishlist")
-   console.log(req.user)
-})
+  const geoData = await geocodingClient.forwardGeocode({
+    query: req.body.location,
+    limit: 1
+  }).send();
 
+  const newListing = new Listing({
+    title: req.body.title,
+    description: req.body.description,
+    image: {
+      url: req.file.path,
+      filename: req.file.filename
+    },
+    price: req.body.price,
+    location: req.body.location,
+    country: req.body.country,
+    owner: req.user._id,
+    geometry: geoData.body.features[0].geometry
+  });
 
-module.exports=router;
+  await newListing.save();
+  req.flash("success", "New listing created successfully!");
+  res.redirect("/listings");
+}));
+
+router.get("/edit/:id", wrapAsync(async (req, res) => {
+  const listingData = await Listing.findById(req.params.id);
+
+  if (!listingData) {
+    req.flash("error", "Listing does not exist");
+    return res.redirect("/listings");
+  }
+
+  if (!req.isAuthenticated()) {
+    req.flash("error", "You must be Logged in to Edit Listing.");
+    return res.redirect("/login");
+  }
+
+  res.render("edit.ejs", { result: listingData });
+}));
+
+router.patch("/edit/:id", isLoggedin, upload.single("image"), wrapAsync(async (req, res) => {
+  if (!req.body.title && !req.body.description && !req.body.price && !req.body.location && !req.body.country) {
+    throw new ExpressError(400, "Send valid data for your listing");
+  }
+
+  const updateData = {
+    title: req.body.title,
+    description: req.body.description,
+    price: req.body.price,
+    location: req.body.location,
+    country: req.body.country
+  };
+
+  if (req.file) {
+    updateData.image = {
+      url: req.file.path,
+      filename: req.file.filename
+    };
+  }
+
+  await Listing.findByIdAndUpdate(req.params.id, updateData);
+  req.flash("success", "Listing edited successfully!");
+  res.redirect(`/listings/show/${req.params.id}`);
+}));
+
+router.delete("/delete/:id", isLoggedin, wrapAsync(async (req, res) => {
+  await Listing.findByIdAndDelete(req.params.id);
+  req.flash("success", "Listing deleted successfully!");
+  res.redirect("/listings");
+}));
+
+router.get("/show/:id", wrapAsync(async (req, res) => {
+  const listing = await Listing.findById(req.params.id)
+    .populate("owner")
+    .populate({
+      path: "reviews",
+      populate: { path: "owner" }
+    });
+
+  if (!listing) {
+    req.flash("error", "The listing does not exist.");
+    return res.redirect("/listings");
+  }
+
+  res.render("show.ejs", { listing, req });
+}));
+
+router.post("/:id/reviews", isLoggedin, wrapAsync(async (req, res) => {
+  const listingItem = await Listing.findById(req.params.id);
+  const newReview = new Review(req.body.review);
+
+  if (!newReview.comment || !newReview.rating || newReview.rating < 1 || newReview.rating > 5) {
+    throw new ExpressError(400, "Send valid review data");
+  }
+
+  newReview.owner = req.user._id;
+  listingItem.reviews.push(newReview);
+  await newReview.save();
+  await listingItem.save();
+
+  req.flash("success", "Review created successfully!");
+  res.redirect(`/listings/show/${req.params.id}`);
+}));
+
+router.delete("/:id/reviews/:reviewid", wrapAsync(async (req, res) => {
+  await Listing.findByIdAndUpdate(req.params.id, { $pull: { reviews: req.params.reviewid } });
+  await Review.findByIdAndDelete(req.params.reviewid);
+  req.flash("success", "Review deleted successfully!");
+  res.redirect(`/listings/show/${req.params.id}`);
+}));
+
+router.get("/wishlist/:id", isLoggedin, wrapAsync(async (req, res) => {
+  const userId = req.user._id;
+  await User.findByIdAndUpdate(userId, { $push: { wishlist: req.params.id } });
+  res.send("on wishlist");
+}));
+
+module.exports = router;
