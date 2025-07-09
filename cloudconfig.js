@@ -36,6 +36,9 @@
 // cloudconfig.js
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -53,5 +56,11 @@ const storage = new CloudinaryStorage({
 
 const multer = require('multer');
 const upload = multer({ storage });
+console.log("Cloudinary ENV", {
+  name: process.env.CLOUD_NAME,
+  key: process.env.API_KEY,
+  secret: process.env.API_SECRET ? "✅ loaded" : "❌ missing"
+});
+
 
 module.exports = { cloudinary, storage, upload };
