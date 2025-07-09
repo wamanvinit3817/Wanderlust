@@ -63,6 +63,7 @@ router.get("/new",(req,res)=>{
 })
 
 router.post("/",upload.single("image"),wrapAsync(async (req,res,next)=>{
+  console.log(req.file)
     if(!req.body.title || !req.body.description || !req.body.price || !req.body.location || !req.body.country){
         throw new ExpressError(400,"Send valid data for your listing")
     }
