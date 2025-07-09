@@ -1,0 +1,54 @@
+
+
+<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top" >
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/listings"><i class="fa-regular fa-compass"></i></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+     
+        <a class="nav-link" href="/listings">Explore</a>
+       
+       
+        
+      </div>
+      <div class="search ms-auto ">
+
+          <form class="d-flex" role="search" method="post" action="/search">
+      <input class="form-control me-2 search" type="search" name="search" placeholder="Want to find something.." aria-label="Search" style="border-radius: 25px; padding: 0.5rem 3rem 0.5rem 5rem;font-size: 0.8rem;"/>
+      <button class="btn btn-search" type="submit"> Search</button>
+    </form>
+
+    
+   
+
+      </div>
+
+  <div class="btn-group ms-auto ">
+  <button class="btn btn-secondary dropdown-toggle dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Find by
+  </button>
+  <ul class="dropdown-menu" style="font-size: small;">
+    <li ><a class="dropdown-item" href="listings/search/price">Price</a></li>
+    <li><a class="dropdown-item" href="listings/search/country">Country</a></li>
+    
+  </ul>
+</div>
+     <div class="navbar-nav ms-auto">
+       <a class="nav-link" href="/listings/new" style="margin-right: 3px;">Airbnb your home</a>
+      <% if(!currentUser){ %>
+        <a class="nav-link  me-2" href="/signup" >Signup</a>
+           <a class="nav-link " href="/login" >Login</a>
+      <%}%>
+      <% if(currentUser){ %>
+        <a class="nav-link " href="/logout"  >LogOut</a>
+      <%}%>
+      </div>
+     
+     
+       
+    </div>
+  </div>
+</nav>

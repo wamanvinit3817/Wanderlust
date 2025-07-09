@@ -1,0 +1,136 @@
+<%layout("boilerplate.ejs") %>
+<script>
+ let mapToken="<%= process.env.MAP_TOKEN %>"
+ 
+</script>
+
+
+
+<div class="row offset-2">
+<div class="col-8">
+  <br>
+  <h3><%=listing.title %></h3>
+<br>
+<div class="card listing-card" >
+  <div class="row">
+<div class="col-12">
+
+  <img src="<%=listing.image%>" class="card-img-top show-img" alt="image">
+   </div>
+  </div>
+
+  <div class="card-body">
+    <p class="card-text">
+      <h5 style="color: #fe424d; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;"><i class="fa-solid fa-user-tie" style="color: black;"></i> Listed by- @<%= listing.owner.username%></h5>
+      <i class="fa-solid fa-check"></i> <%=listing.description %><br>
+      <i class="fa-solid fa-check"></i> ₹ <%= (listing.price !== null && listing.price !== undefined) ? listing.price.toLocaleString("en-IN") : "N/A" %> /night<br>
+      <i class="fa-solid fa-location-dot"></i> <%=listing.location %><br>
+      <i class="fa-solid fa-check"></i> <%=listing.country %>
+     
+    </p>
+  </div>
+</div>
+<% if(currentUser && currentUser._id.equals(listing.owner._id) ) {%>
+  <div class="btns">
+    <a href="/listings/edit/<%=listing.id%>"><button id="btn-e">Edit this listing <i class="fa-solid fa-pen-to-square"></i></button></a><br><br>
+  <form method="post" action="/listings/delete/<%=listing.id%>?_method=DELETE">
+        <button style="margin-left: 2rem;" id="btn-d">Delete this listing <i class="fa-solid fa-trash"></i></button>
+  </form>
+
+  </div>
+  <% }%>
+    <% if(req.isAuthenticated()) {%>
+  <hr>
+ 
+  <h5>Want to review this Listing?</h5>
+<div>
+  <form  class="mb-3 mt-3 needs-validation" method="post" action="/listings/<%=listing.id %>/reviews" novalidate>
+    <div class="mb-3 mt-3">
+     
+      <label for="rating" class="form=label">Rate us <i class="fa-solid fa-star" style="color: #fe424d;"></i> :</label>
+
+      <fieldset class="starability-slot">
+  <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1" checked aria-label="No rating." />
+  <input type="radio" id="first-rate1" name="review[rating]" value="1" />
+  <label for="first-rate1" title="Terrible">1 star</label>
+  <input type="radio" id="first-rate2" name="review[rating]" value="2" />
+  <label for="first-rate2" title="Not good">2 stars</label>
+  <input type="radio" id="first-rate3" name="review[rating]" value="3" />
+  <label for="first-rate3" title="Average">3 stars</label>
+  <input type="radio" id="first-rate4" name="review[rating]" value="4" />
+  <label for="first-rate4" title="Very good">4 stars</label>
+  <input type="radio" id="first-rate5" name="review[rating]" value="5" />
+  <label for="first-rate5" title="Amazing">5 stars</label>
+</fieldset>
+
+     
+    </div>
+
+
+   
+    <div  class="mb-3 mt-3">
+      <label for="comment" class="form-label">Want to say something?</label>
+      <textarea name="review[comment]" id="comment" cols="30" rows="5" class="form-control" required></textarea>
+      <div class="valid-feedback">Thanks for your feedback!</div>
+      <div class="invalid-feedback">Please write something!</div>
+    </div>
+    <button id="btn-e">Submit <i class="fa-solid fa-arrow-up-from-bracket"></i></button>
+    <% }%>
+   
+  </form>
+    <% if(listing.reviews.length){ %>
+<hr>
+  <h5>What people say about this Listing?  <% if(!req.isAuthenticated()){ %>
+      <a href="/login" style="text-decoration: none;color: #fe424d;"> Login</a> to add your own
+      <% }%></h5>
+<%} %>
+ 
+<div class="row">
+ 
+   <% for(review of listing.reviews){%>
+  <div class="card mb-4 mt-3 col-5 ms-3" style="margin: 2px;"   >
+    <div class="card-body" >
+       <h6 class="card-title"><i class="fa-solid fa-user"></i> <%= review.owner.username %>
+       <% if(currentUser && currentUser._id.equals(review.owner._id)){%>
+        (Me)
+      
+        <% }%>
+      </h6> 
+      
+      <p class="starability-result card-text" data-rating= "<%=review.rating %>"  >
+      
+      </p>
+     
+       <p class="card-text" style="font-size: small;"><%=review.comment %></p>
+
+       <% if(currentUser && currentUser._id.equals(review.owner._id)){%>
+       <form method="post" action="/listings/<%=listing.id %>/reviews/<%= review.id%>?_method=DELETE">
+        <button class="btn btn-sm btn-dark">Delete <i class="fa-solid fa-trash"></i></button>
+       </form>
+       <%} %>
+    </div>
+  </div>
+  <% }%>
+<hr>
+                       
+             <div class="col-6 mt-2 mb-3" >
+      <h4 class=" mb-2">Where you'll be:</h4>
+      <div id="map"  data-coords='<%- JSON.stringify(listing.geometry.coordinates) %>'></div>
+    </div>   
+                            </div>
+                                
+                       </div>
+                     </div>
+             
+ 
+
+
+                          <script src="/js/map.js"></script>
+ 
+
+
+
+ 
+  
+  
+

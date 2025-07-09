@@ -1,0 +1,29 @@
+<% layout("boilerplate.ejs") %>
+ <div class="row row-cols-lg-4 row-cols-md-3 row-cols-sm-1 listingimg mt-3" style="margin-top: 2rem;">
+        <%for(listing of listings){%>
+          
+            <a href="/listings/show/<%=listing.id %>" id="show">
+             
+                <div class="card col listing-card" style="width: 15rem;">
+                  
+    <img src="<%=listing.image %>" class="card-img-top" alt="img" style="height: 15rem;">
+   
+     <div class="card-img-overlay"></div>
+     <!-- Wishlist (heart) button -->
+          
+          
+            <i class="fa-regular fa-heart wishlist-btn ms-auto" ></i>
+    
+       
+     
+    <div class="card-body">
+    <p class="card-text"><b><%=listing.title%></b>
+    <br>
+     ₹ <%= (listing.price !== null && listing.price !== undefined) ? listing.price.toLocaleString("en-IN") : "N/A" %> /night
+      &nbsp; &nbsp;<i class="tax-info" style="font-size: small;"> +18% GST</i>
+       </p>
+     </div>
+    </div>
+   <%}%>
+  </a>
+</div> 

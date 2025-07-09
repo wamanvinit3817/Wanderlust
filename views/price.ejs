@@ -1,0 +1,15 @@
+<% layout("boilerplate.ejs") %>
+
+ <div class="rows offset-1">
+        <div class="cols-6"> 
+             <div class="mb-3 mt-3 ">
+                <form class="form-control price needs-validation" novalidate method="post" action="/listings/search/price/find">
+    <label for="title" class="form-label "  >Price should be less than:</label>
+        <input placeholder="Enter price" name="price"  type="number" class="form-control" required>
+         <div class="invalid-feedback">This field is required.</div>
+         <button id="add-btn" style="margin-top: 2rem;margin-bottom: 1rem;">Search <i class="fa-solid fa-magnifying-glass"></i></button>
+           </form>
+    </div>
+        </div>
+        </div>
+    
