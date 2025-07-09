@@ -33,8 +33,9 @@
 // });
 
 // module.exports={cloudinary,storage};
+// cloudconfig.js
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('@fluidjs/multer-cloudinary');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -53,8 +54,4 @@ const storage = new CloudinaryStorage({
 const multer = require('multer');
 const upload = multer({ storage });
 
-module.exports = {
-  cloudinary,
-  storage,
-  upload
-};
+module.exports = { cloudinary, storage, upload };
