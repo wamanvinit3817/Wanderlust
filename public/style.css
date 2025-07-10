@@ -374,3 +374,15 @@ a {
   text-decoration: none;
   color: #222222;
 }
+/* FINAL FIX: Ensure dropdown is solid and appears above other content */
+.dropdown-menu {
+  background-color: white !important;   /* Makes background solid */
+  z-index: 9999 !important;             /* Keeps it on top */
+  position: absolute !important;        /* Stacks it over other elements */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  /* Optional visual enhancement */
+}
+
+.dropdown {
+  position: relative;
+  z-index: 1000;  /* Ensure dropdown container is above nearby items */
+}
