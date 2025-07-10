@@ -385,14 +385,18 @@ a {
   background-color: white !important;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  padding: 0.5rem 0; /* Optional for spacing */
 }
+
 .dropdown-item {
   background-color: white !important;
   color: #222 !important;
-  z-index: auto; /* Optional – usually unnecessary */
 }
-.dropdown-item:hover {
+
+.dropdown-item:hover,
+.dropdown-item:focus {
   background-color: #f8f9fa !important;
   color: #fe424d !important;
 }
+
 
