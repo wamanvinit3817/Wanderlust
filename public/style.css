@@ -381,11 +381,11 @@ a {
 
 .dropdown-menu {
   position: absolute !important;
-  z-index: 1050 !important;
+  z-index: 9999 !important;
   background-color: white !important;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  padding: 0.5rem 0; /* Optional for spacing */
+  display: block !important;
 }
 
 .dropdown-item {
@@ -393,10 +393,20 @@ a {
   color: #222 !important;
 }
 
-.dropdown-item:hover,
-.dropdown-item:focus {
+.dropdown-item:hover {
   background-color: #f8f9fa !important;
   color: #fe424d !important;
+}
+
+/* Ensure no container is blocking stacking */
+.navbar,
+.container-fluid,
+.btn-group {
+  position: static !important;
+  z-index: auto !important;
+}
+.dropdown-menu {
+  font-size: small !important;
 }
 
 
